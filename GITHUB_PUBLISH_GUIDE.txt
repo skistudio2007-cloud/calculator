@@ -1,0 +1,19 @@
+﻿# Git Commands to Publish Calcora to GitHub
+
+# 1. Download and install Git from: https://git-scm.com/download/win
+# 2. Open PowerShell or Command Prompt in this folder (C:\calculater)
+# 3. Initialize repository:
+git init -b main
+
+# 4. Stage all files:
+git add .
+
+# 5. Make initial commit:
+git commit -m "feat: initial release of Calcora AMOLED Calculator & Universal Converter v1.0"
+
+# 6. Create a new repository on https://github.com/new named 'calcora'
+# 7. Link your remote (replace USERNAME with your actual GitHub username):
+git remote add origin https://github.com/USERNAME/calcora.git
+
+# 8. Push to GitHub:
+git push -u origin main

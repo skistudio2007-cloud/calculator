@@ -1,0 +1,1874 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Calcora — AMOLED Calculator & Converter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Playfair+Display:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-primary: #000000;
+      --bg-secondary: #101216;
+      --surface-card: #121418;
+      --btn-bg: #16191E;
+      --btn-pressed: #22262E;
+      --text-digit: #EDEDED;
+      --text-secondary: #858C96;
+      --op-red: #E53935;
+      --clear-orange: #E87A5D;
+      --equals-red: #E53935;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --cursor-red: #E53935;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background-color: #050608;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: var(--text-digit);
+      overflow-x: hidden;
+      padding: 12px;
+    }
+
+    /* Device Mockup Shell */
+    .app-shell {
+      width: 100%;
+      max-width: 412px;
+      height: 870px;
+      background: var(--bg-primary);
+      border-radius: 46px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 10px #15171c, 0 0 0 12px #22252d;
+    }
+
+    /* Screen Container */
+    .screen-container {
+      flex: 1;
+      position: relative;
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      padding-top: 14px;
+    }
+
+    .tab-view {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      padding-bottom: 20px;
+    }
+
+    .tab-view.active {
+      display: flex;
+    }
+
+    /* Header for other views */
+    .app-header {
+      height: 56px;
+      padding: 0 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      color: var(--text-digit);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 17px;
+      transition: all 0.15s;
+    }
+
+    .icon-btn:active {
+      transform: scale(0.92);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Calculator Top Bar (History, All Tools + Top-Right 3-Dot) */
+    .calc-top-bar {
+      padding: 10px 18px 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 20;
+    }
+
+    .top-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .calc-brand-title {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--text-digit);
+      letter-spacing: 0.5px;
+    }
+
+    .top-text-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      padding: 4px 6px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: color 0.15s, background-color 0.15s;
+    }
+
+    .top-text-btn:hover, .top-text-btn:active {
+      color: var(--text-digit);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .top-bar-right {
+      position: relative;
+    }
+
+    .top-more-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .top-more-btn:active, .top-more-btn:hover {
+      color: var(--text-digit);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Calculator Display Area */
+    .calc-display-section {
+      flex: 1;
+      padding: 10px 24px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-end;
+    }
+
+    .display-expr-line {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+      font-size: 22px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+      min-height: 28px;
+      word-break: break-all;
+      text-align: right;
+    }
+
+    .display-main-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      width: 100%;
+    }
+
+    .display-number {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+      font-size: 60px;
+      font-weight: 300;
+      color: var(--text-digit);
+      line-height: 1.1;
+      word-break: break-all;
+      text-align: right;
+    }
+
+    .red-cursor {
+      width: 3px;
+      height: 52px;
+      background: var(--cursor-red);
+      margin-left: 4px;
+      animation: blink 1.1s infinite;
+      border-radius: 2px;
+    }
+
+    @keyframes blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+
+    .steps-pill {
+      margin-top: 8px;
+      background: rgba(229, 57, 53, 0.14);
+      color: var(--op-red);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Mid Toolbar */
+    .mid-toolbar {
+      padding: 10px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .mid-toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+    }
+
+    .tool-icon-btn {
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 20px;
+      background: none;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s, transform 0.15s;
+    }
+
+    .tool-icon-btn:active {
+      transform: scale(0.9);
+      color: var(--text-digit);
+    }
+
+    .tool-icon-btn.active {
+      color: var(--op-red);
+    }
+
+    .tool-icon-btn.backspace-btn {
+      color: var(--op-red);
+      font-size: 21px;
+    }
+
+    /* Keypads */
+    .keypad-container {
+      padding: 6px 16px 16px;
+    }
+
+    /* 4-Column Keypad */
+    .keypad-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    /* 5-Column Keypad */
+    .keypad-grid-5 {
+      display: none;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .keypad-grid-5.active {
+      display: grid;
+    }
+
+    .keypad-grid-4.hidden {
+      display: none;
+    }
+
+    /* Circular Buttons */
+    .circle-btn {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--btn-bg);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 26px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+      font-weight: 400;
+      color: var(--text-digit);
+      transition: background-color 0.12s, transform 0.1s;
+    }
+
+    .circle-btn:active {
+      background: var(--btn-pressed);
+      transform: scale(0.94);
+    }
+
+    .circle-btn.btn-op {
+      color: var(--op-red);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 500;
+      font-size: 25px;
+    }
+
+    .circle-btn.btn-clear {
+      color: var(--clear-orange);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 24px;
+    }
+
+    .circle-btn.btn-equals {
+      background: var(--equals-red);
+      color: #FFFFFF;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      font-size: 28px;
+      box-shadow: 0 4px 14px rgba(229, 57, 53, 0.4);
+    }
+
+    .circle-btn.btn-equals:active {
+      background: #c62828;
+      transform: scale(0.94);
+    }
+
+    .circle-btn.btn-fn {
+      color: var(--text-secondary);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    /* 3-Dot Overflow Menu */
+    .dropdown-menu-glass {
+      display: none;
+      position: absolute;
+      top: 44px;
+      right: 0;
+      min-width: 200px;
+      background: #14161C;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      padding: 6px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.85);
+      z-index: 1000;
+      flex-direction: column;
+    }
+
+    .dropdown-menu-glass.show {
+      display: flex;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-digit);
+      transition: background-color 0.15s;
+    }
+
+    .dropdown-item i {
+      font-size: 16px;
+      color: var(--op-red);
+      width: 20px;
+      text-align: center;
+    }
+
+    .dropdown-item:hover, .dropdown-item:active {
+      background: rgba(229, 57, 53, 0.14);
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      margin: 6px 8px;
+    }
+
+    /* UNIT CONVERTER MODAL SHEET (Image 2) */
+    .unit-modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      display: none;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .unit-modal-overlay.show {
+      display: flex;
+    }
+
+    /* Privacy Policy Modal */
+    .privacy-modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(8px);
+      z-index: 210;
+      display: none;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .privacy-modal-overlay.show {
+      display: flex;
+    }
+
+    .privacy-sheet {
+      background: #121418;
+      border-radius: 32px 32px 0 0;
+      max-height: 85%;
+      overflow-y: auto;
+      border-top: 1px solid var(--border-color);
+      padding: 16px 22px 36px;
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.85);
+    }
+
+    .privacy-content {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .privacy-item {
+      background: #161920;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 14px 16px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .privacy-icon {
+      color: var(--op-red);
+      font-size: 18px;
+      margin-top: 2px;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .privacy-item h4 {
+      margin: 0 0 4px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-digit);
+    }
+
+    .privacy-item p {
+      margin: 0;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    .privacy-close-btn {
+      width: 100%;
+      margin-top: 20px;
+      padding: 13px;
+      background: var(--op-red);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .privacy-close-btn:active {
+      background: #c62828;
+    }
+
+    .unit-sheet {
+      background: #121418;
+      border-radius: 32px 32px 0 0;
+      max-height: 82%;
+      overflow-y: auto;
+      border-top: 1px solid var(--border-color);
+      padding: 16px 18px 36px;
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8);
+    }
+
+    .sheet-handle {
+      width: 38px;
+      height: 4px;
+      background: #33363F;
+      border-radius: 4px;
+      margin: 0 auto 16px;
+    }
+
+    .sheet-title {
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      letter-spacing: 2px;
+      color: #C0C4CC;
+      text-align: center;
+      margin-bottom: 24px;
+      font-weight: 600;
+    }
+
+    .unit-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      row-gap: 24px;
+      column-gap: 12px;
+    }
+
+    .unit-grid-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      background: #13161C;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 12px 6px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .unit-grid-cell:hover {
+      background: #1A1E26;
+      border-color: rgba(229, 57, 53, 0.35);
+      transform: translateY(-2px);
+    }
+
+    .unit-grid-cell:active {
+      transform: scale(0.95);
+      background: #111317;
+    }
+
+    .unit-grid-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #1A1D24;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #CFD3DC;
+      margin-bottom: 8px;
+      transition: all 0.2s;
+    }
+
+    .unit-grid-cell:hover .unit-grid-icon {
+      background: rgba(229, 57, 53, 0.15);
+      color: var(--op-red);
+    }
+
+    .unit-grid-cell.primary .unit-grid-icon {
+      background: rgba(229, 57, 53, 0.18);
+      color: var(--op-red);
+    }
+
+    .unit-grid-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: #C4C8D2;
+      text-align: center;
+      line-height: 1.2;
+      letter-spacing: 0.2px;
+    }
+
+    .unit-grid-cell.primary .unit-grid-label {
+      color: var(--op-red);
+      font-weight: 600;
+    }
+
+    /* Tool Forms & Cards */
+    .tool-form-card {
+      background: #14171D;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 22px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+
+    .input-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .app-input {
+      width: 100%;
+      background: #0B0D11;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 12px 14px;
+      color: var(--text-digit);
+      font-size: 16px;
+      font-weight: 600;
+      outline: none;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+    }
+
+    .app-input:focus {
+      border-color: var(--op-red);
+      box-shadow: 0 0 0 1px rgba(229, 57, 53, 0.3);
+    }
+
+    .result-big {
+      font-size: 30px;
+      color: var(--text-digit);
+      font-weight: 700;
+      margin: 4px 0;
+      letter-spacing: -0.5px;
+    }
+
+    /* History item */
+    .history-card {
+      background: #14171D;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+
+    .history-card:hover {
+      border-color: rgba(229, 57, 53, 0.35);
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-shell" id="appShell">
+
+    <div class="screen-container">
+
+      <!-- TAB 1: MAIN AMOLED CALCULATOR -->
+      <div class="tab-view active" id="tabCalculator">
+
+        <!-- Top App Bar: History & Tools on Left (No Calcora text, No Icons) + 3-Dot on Top Right -->
+        <div class="calc-top-bar">
+          <div class="top-bar-left">
+            <button class="top-text-btn" onclick="triggerHaptic(); switchTab('tabHistory')" title="History">History</button>
+            <button class="top-text-btn" onclick="triggerHaptic(); openUnitSheet()" title="Tools">Tools</button>
+          </div>
+          <div class="top-bar-right">
+            <button class="top-more-btn" id="moreOptionsBtn" onclick="toggleThreeDotMenu(event)" title="Options">
+              <i class="fa-solid fa-ellipsis-vertical"></i>
+            </button>
+            <!-- 3-Dot Overflow Dropdown (Top Right) -->
+            <div class="dropdown-menu-glass" id="threeDotDropdown">
+              <div class="dropdown-item" onclick="triggerHaptic(); toggleScientificKeypad(); closeThreeDotMenu();">
+                <i class="fa-solid fa-calculator"></i>
+                <span id="sciMenuLabel">Scientific Mode</span>
+              </div>
+              <div class="dropdown-item" onclick="triggerHaptic(); switchTab('tabSettings'); closeThreeDotMenu();">
+                <i class="fa-solid fa-gear"></i>
+                <span>Settings</span>
+              </div>
+              <div class="dropdown-item" onclick="triggerHaptic(); openPrivacyModal(); closeThreeDotMenu();">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Privacy Policy</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Display Area -->
+        <div class="calc-display-section">
+          <div class="display-expr-line" id="calcExpr"></div>
+          <div class="display-main-row">
+            <span class="display-number" id="calcRes">60</span>
+            <span class="red-cursor"></span>
+          </div>
+          <div class="steps-pill" id="stepsPill" onclick="openStepsModal()">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Show Steps
+          </div>
+        </div>
+
+        <!-- Mid Toolbar: Scientific Toggle on Left | Backspace on Right -->
+        <div class="mid-toolbar">
+          <button class="tool-icon-btn" id="sciToggleBtn" onclick="triggerHaptic(); toggleScientificKeypad()" title="Toggle Scientific Keypad">
+            <i class="fa-solid fa-calculator"></i>
+          </button>
+          <button class="tool-icon-btn backspace-btn" onclick="triggerHaptic(); backspaceCalc()" title="Backspace">
+            <i class="fa-solid fa-delete-left"></i>
+          </button>
+        </div>
+
+        <!-- Keypads Container -->
+        <div class="keypad-container">
+
+          <!-- Standard 4-Column Keypad (Image 3) -->
+          <div class="keypad-grid-4" id="standardKeypad">
+            <button class="circle-btn btn-clear" onclick="press('C')">C</button>
+            <button class="circle-btn btn-op" onclick="press('()')">()</button>
+            <button class="circle-btn btn-op" onclick="press('%')">%</button>
+            <button class="circle-btn btn-op" onclick="press('÷')">÷</button>
+
+            <button class="circle-btn" onclick="press('7')">7</button>
+            <button class="circle-btn" onclick="press('8')">8</button>
+            <button class="circle-btn" onclick="press('9')">9</button>
+            <button class="circle-btn btn-op" onclick="press('×')">×</button>
+
+            <button class="circle-btn" onclick="press('4')">4</button>
+            <button class="circle-btn" onclick="press('5')">5</button>
+            <button class="circle-btn" onclick="press('6')">6</button>
+            <button class="circle-btn btn-op" onclick="press('−')">−</button>
+
+            <button class="circle-btn" onclick="press('1')">1</button>
+            <button class="circle-btn" onclick="press('2')">2</button>
+            <button class="circle-btn" onclick="press('3')">3</button>
+            <button class="circle-btn btn-op" onclick="press('+')">+</button>
+
+            <button class="circle-btn" onclick="press('0')">0</button>
+            <button class="circle-btn" onclick="press('00')">00</button>
+            <button class="circle-btn" onclick="press('.')">.</button>
+            <button class="circle-btn btn-equals" onclick="evaluateCalc()">=</button>
+          </div>
+
+          <!-- Scientific 5-Column Keypad (Image 1) -->
+          <div class="keypad-grid-5" id="scientificKeypad">
+            <!-- Row 1 -->
+            <button class="circle-btn btn-fn" onclick="toggleInv()">⇄</button>
+            <button class="circle-btn btn-fn" id="radBtn" onclick="toggleRad()">Rad</button>
+            <button class="circle-btn btn-fn" onclick="pressFn('sin')">sin</button>
+            <button class="circle-btn btn-fn" onclick="pressFn('cos')">cos</button>
+            <button class="circle-btn btn-fn" onclick="pressFn('tan')">tan</button>
+
+            <!-- Row 2 -->
+            <button class="circle-btn btn-fn" onclick="pressFn('√')">√</button>
+            <button class="circle-btn btn-fn" onclick="pressFn('ln')">ln</button>
+            <button class="circle-btn btn-fn" onclick="pressFn('log')">log</button>
+            <button class="circle-btn btn-fn" onclick="pressInverse()">1/x</button>
+            <button class="circle-btn btn-fn" onclick="press('e^')">eˣ</button>
+
+            <!-- Row 3 -->
+            <button class="circle-btn btn-fn" onclick="pressPower('2')">x²</button>
+            <button class="circle-btn btn-clear" onclick="press('C')">C</button>
+            <button class="circle-btn btn-op" onclick="press('()')">()</button>
+            <button class="circle-btn btn-op" onclick="press('%')">%</button>
+            <button class="circle-btn btn-op" onclick="press('÷')">÷</button>
+
+            <!-- Row 4 -->
+            <button class="circle-btn btn-fn" onclick="press('^')">xʸ</button>
+            <button class="circle-btn" onclick="press('7')">7</button>
+            <button class="circle-btn" onclick="press('8')">8</button>
+            <button class="circle-btn" onclick="press('9')">9</button>
+            <button class="circle-btn btn-op" onclick="press('×')">×</button>
+
+            <!-- Row 5 -->
+            <button class="circle-btn btn-fn" onclick="pressFn('abs')">|x|</button>
+            <button class="circle-btn" onclick="press('4')">4</button>
+            <button class="circle-btn" onclick="press('5')">5</button>
+            <button class="circle-btn" onclick="press('6')">6</button>
+            <button class="circle-btn btn-op" onclick="press('−')">−</button>
+
+            <!-- Row 6 -->
+            <button class="circle-btn btn-fn" onclick="press('π')">π</button>
+            <button class="circle-btn" onclick="press('1')">1</button>
+            <button class="circle-btn" onclick="press('2')">2</button>
+            <button class="circle-btn" onclick="press('3')">3</button>
+            <button class="circle-btn btn-op" onclick="press('+')">+</button>
+
+            <!-- Row 7 -->
+            <button class="circle-btn btn-fn" onclick="press('e')">e</button>
+            <button class="circle-btn" onclick="press('0')">0</button>
+            <button class="circle-btn" onclick="press('00')">00</button>
+            <button class="circle-btn" onclick="press('.')">.</button>
+            <button class="circle-btn btn-equals" onclick="evaluateCalc()">=</button>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- TAB 2: HISTORY -->
+      <div class="tab-view" id="tabHistory">
+        <header class="app-header">
+          <div class="brand">
+            <button class="icon-btn" onclick="switchTab('tabCalculator')"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2 style="font-family:'Playfair Display', serif; font-size:20px;">History</h2>
+          </div>
+          <button class="icon-btn" onclick="clearHistory()" title="Clear All" style="color:var(--op-red);"><i class="fa-solid fa-trash"></i></button>
+        </header>
+        <div style="padding: 10px 18px;" id="historyList"></div>
+      </div>
+
+      <!-- TAB 3: SETTINGS -->
+      <div class="tab-view" id="tabSettings">
+        <header class="app-header">
+          <div class="brand">
+            <button class="icon-btn" onclick="switchTab('tabCalculator')"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2 style="font-family:'Playfair Display', serif; font-size:20px;">Settings</h2>
+          </div>
+        </header>
+        <div style="padding: 12px 18px;">
+          <div class="tool-form-card">
+            <h3 style="font-size:15px; margin-bottom:8px;">Haptic Touch Feedback</h3>
+            <p style="font-size:13px; color:var(--text-secondary); margin-bottom:12px;">Tactile vibration feedback on every button click.</p>
+            <label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer;">
+              <input type="checkbox" id="hapticCheck" checked onchange="toggleHapticSetting(this.checked)"> Enable Haptic Vibration
+            </label>
+          </div>
+
+          <div class="tool-form-card">
+            <h3 style="font-size:15px; margin-bottom:8px;">About Calcora</h3>
+            <p style="font-size:13px; color:var(--text-secondary); line-height:1.5;">
+              Minimalist AMOLED Black All-in-One Calculator with BODMAS solver, 22 converters, and high-precision scientific engine.
+            </p>
+            <button onclick="triggerHaptic(); openPrivacyModal();" style="margin-top:12px; background:#1A1D24; border:1px solid rgba(255,255,255,0.08); border-radius:12px; color:var(--text-digit); padding:9px 14px; cursor:pointer; display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600;">
+              <i class="fa-solid fa-shield-halved" style="color:var(--op-red)"></i> Privacy Policy
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVE TOOL DETAIL VIEW (DYNAMIC) -->
+      <div class="tab-view" id="toolDetailView">
+        <header class="app-header">
+          <div class="brand">
+            <button class="icon-btn" onclick="switchTab('tabCalculator')"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2 id="toolDetailTitle" style="font-family:'Playfair Display', serif; font-size:20px;">Tool</h2>
+          </div>
+        </header>
+        <div style="padding: 12px 18px;" id="toolDetailContent"></div>
+      </div>
+
+    </div>
+
+    <!-- UNIT CONVERTER MODAL SHEET (IMAGE 2) -->
+    <div class="unit-modal-overlay" id="unitModal" onclick="if(event.target===this) closeUnitSheet()">
+      <div class="unit-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">UNIT CONVERTER</div>
+        <div class="unit-grid-4">
+
+          <!-- Row 1 -->
+          <div class="unit-grid-cell primary" onclick="openTool('currency')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-dollar-sign"></i></div>
+            <div class="unit-grid-label">Currency</div>
+          </div>
+          <div class="unit-grid-cell" onclick="openTool('area')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-vector-square"></i></div>
+            <div class="unit-grid-label">Area</div>
+          </div>
+          <div class="unit-grid-cell" onclick="openTool('length')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-ruler-horizontal"></i></div>
+            <div class="unit-grid-label">Length</div>
+          </div>
+          <div class="unit-grid-cell" onclick="openTool('temperature')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-temperature-half"></i></div>
+            <div class="unit-grid-label">Temperature</div>
+          </div>
+
+          <!-- Row 2 -->
+          <div class="unit-grid-cell" onclick="openTool('volume')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-cube"></i></div>
+            <div class="unit-grid-label">Volume</div>
+          </div>
+          <div class="unit-grid-cell" onclick="openTool('weight')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-weight-scale"></i></div>
+            <div class="unit-grid-label">Mass</div>
+          </div>
+          <div class="unit-grid-cell" onclick="openTool('storage')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-compact-disc"></i></div>
+            <div class="unit-grid-label">Data</div>
+          </div>
+          <div class="unit-grid-cell" onclick="openTool('speed')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-gauge"></i></div>
+            <div class="unit-grid-label">Speed</div>
+          </div>
+
+          <!-- Row 3 -->
+          <div class="unit-grid-cell" onclick="openTool('time')">
+            <div class="unit-grid-icon"><i class="fa-regular fa-clock"></i></div>
+            <div class="unit-grid-label">Time</div>
+          </div>
+          <div class="unit-grid-cell" onclick="openTool('pressure')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-tachograph-digital"></i></div>
+            <div class="unit-grid-label">Pressure</div>
+          </div>
+          <div class="unit-grid-cell" onclick="openTool('force')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
+            <div class="unit-grid-label">Force</div>
+          </div>
+          <div class="unit-grid-cell" onclick="openTool('power')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-bolt"></i></div>
+            <div class="unit-grid-label">Power</div>
+          </div>
+
+          <!-- Row 4 -->
+          <div class="unit-grid-cell" onclick="openTool('energy')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-fire"></i></div>
+            <div class="unit-grid-label">Energy</div>
+          </div>
+          <div class="unit-grid-cell" onclick="openTool('frequency')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-wave-square"></i></div>
+            <div class="unit-grid-label">Frequency</div>
+          </div>
+          <div class="unit-grid-cell" onclick="openTool('angle')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-draw-polygon"></i></div>
+            <div class="unit-grid-label">Angle</div>
+          </div>
+          <div class="unit-grid-cell" onclick="openTool('fuel')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-gas-pump"></i></div>
+            <div class="unit-grid-label">Fuel</div>
+          </div>
+
+          <!-- Row 5 -->
+          <div class="unit-grid-cell" onclick="openTool('age')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-cake-candles"></i></div>
+            <div class="unit-grid-label">Age</div>
+          </div>
+          <div class="unit-grid-cell" onclick="openTool('numeral')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-hashtag"></i></div>
+            <div class="unit-grid-label">Numeral System</div>
+          </div>
+          <div class="unit-grid-cell" onclick="openTool('gst')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-receipt"></i></div>
+            <div class="unit-grid-label">GST</div>
+          </div>
+          <div class="unit-grid-cell" onclick="openTool('split_bill')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="unit-grid-label">Split bill</div>
+          </div>
+
+          <!-- Row 6 -->
+          <div class="unit-grid-cell" onclick="openTool('date_diff')">
+            <div class="unit-grid-icon"><i class="fa-regular fa-calendar-days"></i></div>
+            <div class="unit-grid-label">Date</div>
+          </div>
+          <div class="unit-grid-cell" onclick="openTool('bmi')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+            <div class="unit-grid-label">BMI</div>
+          </div>
+          <div class="unit-grid-cell" onclick="openTool('discount')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-tag"></i></div>
+            <div class="unit-grid-label">Discount</div>
+          </div>
+          <div class="unit-grid-cell" onclick="openTool('loan')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+            <div class="unit-grid-label">Loan</div>
+          </div>
+
+          <!-- Row 7 -->
+          <div class="unit-grid-cell" onclick="openTool('emi')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-credit-card"></i></div>
+            <div class="unit-grid-label">EMI</div>
+          </div>
+          <div class="unit-grid-cell" onclick="openTool('simple_interest')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <div class="unit-grid-label">Investment</div>
+          </div>
+          <div class="unit-grid-cell" onclick="openTool('compound_interest')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-piggy-bank"></i></div>
+            <div class="unit-grid-label">Savings</div>
+          </div>
+          <div class="unit-grid-cell" onclick="openTool('percentage')">
+            <div class="unit-grid-icon"><i class="fa-solid fa-percent"></i></div>
+            <div class="unit-grid-label">Percentage</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- PRIVACY POLICY MODAL SHEET -->
+    <div class="privacy-modal-overlay" id="privacyModal" onclick="if(event.target===this) closePrivacyModal()">
+      <div class="privacy-sheet">
+        <div class="sheet-handle"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:36px; height:36px; border-radius:50%; background:rgba(229,57,53,0.15); display:flex; align-items:center; justify-content:center; color:var(--op-red); font-size:18px;">
+              <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <span style="font-family:'Playfair Display',serif; font-size:20px; font-weight:700; color:var(--text-digit);">Privacy Policy</span>
+          </div>
+          <button class="icon-btn" onclick="closePrivacyModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="privacy-content">
+          <div class="privacy-item">
+            <i class="fa-solid fa-lock privacy-icon"></i>
+            <div>
+              <h4>100% Offline & Private</h4>
+              <p>Calcora operates entirely on your local device. None of your calculations, financial evaluations, or inputs are transmitted to external servers.</p>
+            </div>
+          </div>
+
+          <div class="privacy-item">
+            <i class="fa-solid fa-eye-slash privacy-icon"></i>
+            <div>
+              <h4>Zero Data Tracking</h4>
+              <p>We do not use analytics SDKs, advertising IDs, or behavioral tracking libraries. Your usage patterns stay completely confidential.</p>
+            </div>
+          </div>
+
+          <div class="privacy-item">
+            <i class="fa-solid fa-mobile-screen-button privacy-icon"></i>
+            <div>
+              <h4>Permissions Usage</h4>
+              <p>The VIBRATE permission is used exclusively to generate subtle tactile haptic feedback when tapping keypad buttons.</p>
+            </div>
+          </div>
+
+          <div class="privacy-item">
+            <i class="fa-solid fa-database privacy-icon"></i>
+            <div>
+              <h4>Local Storage Only</h4>
+              <p>Your calculation history and customized preferences are stored in your device's private app storage. You can purge all calculation history at any time from Settings.</p>
+            </div>
+          </div>
+        </div>
+
+        <button class="privacy-close-btn" onclick="closePrivacyModal()">I Understand</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Haptic Vibration Touch
+    let hapticActive = true;
+    function triggerHaptic() {
+      if (hapticActive && 'vibrate' in navigator) {
+        try { navigator.vibrate(18); } catch(e) {}
+      }
+    }
+    function toggleHapticSetting(val) {
+      hapticActive = val;
+    }
+
+    // Calculator State
+    let expr = '';
+    let isEvaluated = false;
+    let isSci = false;
+    let isRad = true;
+    let isInv = false;
+    let lastSteps = [];
+
+    function press(k) {
+      triggerHaptic();
+      if (k === 'C') {
+        clearCalc();
+        return;
+      }
+      if (k === '()') {
+        smartParen();
+        return;
+      }
+      if (isEvaluated) {
+        if (['+', '−', '×', '÷', '%', '^'].includes(k)) {
+          expr = document.getElementById('calcRes').textContent + k;
+        } else {
+          expr = k;
+        }
+        isEvaluated = false;
+      } else {
+        if (expr === '0' && !isNaN(k)) expr = k;
+        else expr += k;
+      }
+      updateDisplay();
+    }
+
+    function pressFn(fn) {
+      triggerHaptic();
+      if (isEvaluated) {
+        expr = fn + '(';
+        isEvaluated = false;
+      } else {
+        expr += fn + '(';
+      }
+      updateDisplay();
+    }
+
+    function pressPower(exp) {
+      triggerHaptic();
+      expr += '^' + exp;
+      updateDisplay();
+    }
+
+    function pressInverse() {
+      triggerHaptic();
+      expr += '1/';
+      updateDisplay();
+    }
+
+    function smartParen() {
+      const openCount = (expr.match(/\(/g) || []).length;
+      const closeCount = (expr.match(/\)/g) || []).length;
+      if (openCount > closeCount) {
+        const last = expr.slice(-1);
+        if (!isNaN(last) || last === ')') expr += ')';
+        else expr += '(';
+      } else {
+        expr += '(';
+      }
+      updateDisplay();
+    }
+
+    function clearCalc() {
+      expr = '';
+      isEvaluated = false;
+      lastSteps = [];
+      document.getElementById('calcExpr').textContent = '';
+      document.getElementById('calcRes').textContent = '0';
+      document.getElementById('stepsPill').style.display = 'none';
+    }
+
+    function backspaceCalc() {
+      triggerHaptic();
+      if (isEvaluated) {
+        clearCalc();
+        return;
+      }
+      expr = expr.slice(0, -1);
+      updateDisplay();
+    }
+
+    function updateDisplay() {
+      document.getElementById('calcRes').textContent = expr || '0';
+    }
+
+    function evaluateCalc() {
+      triggerHaptic();
+      if (!expr) return;
+      try {
+        const normalized = expr
+          .replace(/×/g, '*')
+          .replace(/÷/g, '/')
+          .replace(/−/g, '-')
+          .replace(/π/g, Math.PI)
+          .replace(/e\^/g, 'Math.exp')
+          .replace(/e/g, Math.E);
+
+        const evaluated = evalSafe(normalized);
+        const formatted = formatNumber(evaluated);
+
+        document.getElementById('calcExpr').textContent = expr + ' =';
+        document.getElementById('calcRes').textContent = formatted;
+        isEvaluated = true;
+
+        saveHistory(expr, formatted);
+      } catch (err) {
+        document.getElementById('calcRes').textContent = 'Error';
+      }
+    }
+
+    function evalSafe(str) {
+      let parsed = str
+        .replace(/sin\(([^)]+)\)/g, (_, a) => Math.sin(isRad ? a : (a * Math.PI / 180)))
+        .replace(/cos\(([^)]+)\)/g, (_, a) => Math.cos(isRad ? a : (a * Math.PI / 180)))
+        .replace(/tan\(([^)]+)\)/g, (_, a) => Math.tan(isRad ? a : (a * Math.PI / 180)))
+        .replace(/ln\(([^)]+)\)/g, (_, a) => Math.log(a))
+        .replace(/log\(([^)]+)\)/g, (_, a) => Math.log10(a))
+        .replace(/√\(([^)]+)\)/g, (_, a) => Math.sqrt(a))
+        .replace(/abs\(([^)]+)\)/g, (_, a) => Math.abs(a))
+        .replace(/\^/g, '**');
+
+      return Function('"use strict";return (' + parsed + ')')();
+    }
+
+    function formatNumber(num) {
+      if (Math.abs(num) >= 1e11 || (Math.abs(num) > 0 && Math.abs(num) < 1e-6)) {
+        return num.toExponential(6);
+      }
+      return parseFloat(num.toFixed(8)).toString();
+    }
+
+    // Toggle Scientific / Standard Keypads (Image 1 vs Image 3)
+    function toggleScientificKeypad() {
+      isSci = !isSci;
+      const std = document.getElementById('standardKeypad');
+      const sci = document.getElementById('scientificKeypad');
+      const btn = document.getElementById('sciToggleBtn');
+      const menuLabel = document.getElementById('sciMenuLabel');
+
+      if (isSci) {
+        std.classList.add('hidden');
+        sci.classList.add('active');
+        if (btn) btn.classList.add('active');
+        if (menuLabel) menuLabel.textContent = 'Standard Mode';
+      } else {
+        sci.classList.remove('active');
+        std.classList.remove('hidden');
+        if (btn) btn.classList.remove('active');
+        if (menuLabel) menuLabel.textContent = 'Scientific Mode';
+      }
+    }
+
+    function toggleRad() {
+      isRad = !isRad;
+      document.getElementById('radBtn').textContent = isRad ? 'Rad' : 'Deg';
+    }
+
+    function toggleInv() {
+      isInv = !isInv;
+    }
+
+    // 3-Dot Menu
+    function toggleThreeDotMenu(e) {
+      triggerHaptic();
+      if (e) e.stopPropagation();
+      document.getElementById('threeDotDropdown').classList.toggle('show');
+    }
+    function closeThreeDotMenu() {
+      document.getElementById('threeDotDropdown').classList.remove('show');
+    }
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#moreOptionsBtn') && !e.target.closest('#threeDotDropdown')) {
+        closeThreeDotMenu();
+      }
+    });
+
+    // Unit Converter Modal (Image 2)
+    function openUnitSheet() {
+      triggerHaptic();
+      document.getElementById('unitModal').classList.add('show');
+    }
+    function closeUnitSheet() {
+      document.getElementById('unitModal').classList.remove('show');
+    }
+
+    // Privacy Policy Modal
+    function openPrivacyModal() {
+      triggerHaptic();
+      closeThreeDotMenu();
+      document.getElementById('privacyModal').classList.add('show');
+    }
+    function closePrivacyModal() {
+      document.getElementById('privacyModal').classList.remove('show');
+    }
+
+    // Screen Switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
+      const target = document.getElementById(tabId);
+      if (target) target.classList.add('active');
+      closeUnitSheet();
+      closePrivacyModal();
+
+      if (tabId === 'tabHistory') renderHistory();
+    }
+
+    // Comprehensive Unit Definitions & Universal High-Precision Engine
+    const UNIT_REGISTRY = {
+      storage: {
+        title: 'Data Storage Converter',
+        base: 'Byte',
+        units: [
+          { id: 'b', name: 'Bit (b)', factor: 0.125 },
+          { id: 'B', name: 'Byte (B)', factor: 1.0 },
+          { id: 'KB', name: 'Kilobyte (KB)', factor: 1024.0 },
+          { id: 'MB', name: 'Megabyte (MB)', factor: 1048576.0 },
+          { id: 'GB', name: 'Gigabyte (GB)', factor: 1073741824.0 },
+          { id: 'TB', name: 'Terabyte (TB)', factor: 1099511627776.0 },
+          { id: 'PB', name: 'Petabyte (PB)', factor: 1125899906842624.0 }
+        ],
+        defaultFrom: 'MB',
+        defaultTo: 'GB'
+      },
+      length: {
+        title: 'Length Converter',
+        base: 'Meter',
+        units: [
+          { id: 'nm', name: 'Nanometer (nm)', factor: 1e-9 },
+          { id: 'um', name: 'Micrometer (µm)', factor: 1e-6 },
+          { id: 'mm', name: 'Millimeter (mm)', factor: 0.001 },
+          { id: 'cm', name: 'Centimeter (cm)', factor: 0.01 },
+          { id: 'm', name: 'Meter (m)', factor: 1.0 },
+          { id: 'km', name: 'Kilometer (km)', factor: 1000.0 },
+          { id: 'in', name: 'Inch (in)', factor: 0.0254 },
+          { id: 'ft', name: 'Foot (ft)', factor: 0.3048 },
+          { id: 'yd', name: 'Yard (yd)', factor: 0.9144 },
+          { id: 'mi', name: 'Mile (mi)', factor: 1609.344 },
+          { id: 'nmi', name: 'Nautical Mile', factor: 1852.0 }
+        ],
+        defaultFrom: 'm',
+        defaultTo: 'ft'
+      },
+      weight: {
+        title: 'Mass & Weight Converter',
+        base: 'Kilogram',
+        units: [
+          { id: 'mg', name: 'Milligram (mg)', factor: 0.000001 },
+          { id: 'g', name: 'Gram (g)', factor: 0.001 },
+          { id: 'kg', name: 'Kilogram (kg)', factor: 1.0 },
+          { id: 't', name: 'Metric Ton (t)', factor: 1000.0 },
+          { id: 'oz', name: 'Ounce (oz)', factor: 0.028349523125 },
+          { id: 'lb', name: 'Pound (lb)', factor: 0.45359237 },
+          { id: 'st', name: 'Stone (st)', factor: 6.35029318 }
+        ],
+        defaultFrom: 'kg',
+        defaultTo: 'lb'
+      },
+      area: {
+        title: 'Area Converter',
+        base: 'Square Meter',
+        units: [
+          { id: 'sq_mm', name: 'Square Millimeter (mm²)', factor: 1e-6 },
+          { id: 'sq_cm', name: 'Square Centimeter (cm²)', factor: 1e-4 },
+          { id: 'sq_m', name: 'Square Meter (m²)', factor: 1.0 },
+          { id: 'ha', name: 'Hectare (ha)', factor: 10000.0 },
+          { id: 'sq_km', name: 'Square Kilometer (km²)', factor: 1000000.0 },
+          { id: 'sq_in', name: 'Square Inch (in²)', factor: 0.00064516 },
+          { id: 'sq_ft', name: 'Square Foot (ft²)', factor: 0.09290304 },
+          { id: 'sq_yd', name: 'Square Yard (yd²)', factor: 0.83612736 },
+          { id: 'ac', name: 'Acre (ac)', factor: 4046.8564224 },
+          { id: 'sq_mi', name: 'Square Mile (mi²)', factor: 2589988.110336 }
+        ],
+        defaultFrom: 'sq_m',
+        defaultTo: 'sq_ft'
+      },
+      volume: {
+        title: 'Volume Converter',
+        base: 'Liter',
+        units: [
+          { id: 'ml', name: 'Milliliter (mL)', factor: 0.001 },
+          { id: 'l', name: 'Liter (L)', factor: 1.0 },
+          { id: 'cu_m', name: 'Cubic Meter (m³)', factor: 1000.0 },
+          { id: 'cu_in', name: 'Cubic Inch (in³)', factor: 0.016387064 },
+          { id: 'cu_ft', name: 'Cubic Foot (ft³)', factor: 28.316846592 },
+          { id: 'gal_us', name: 'US Gallon (gal)', factor: 3.785411784 },
+          { id: 'gal_uk', name: 'Imperial Gallon', factor: 4.54609 },
+          { id: 'pt_us', name: 'US Pint (pt)', factor: 0.473176473 },
+          { id: 'cup', name: 'US Cup', factor: 0.2365882365 },
+          { id: 'tbsp', name: 'Tablespoon', factor: 0.01478676478125 },
+          { id: 'tsp', name: 'Teaspoon', factor: 0.00492892159375 }
+        ],
+        defaultFrom: 'l',
+        defaultTo: 'gal_us'
+      },
+      speed: {
+        title: 'Speed Converter',
+        base: 'Meters per second',
+        units: [
+          { id: 'm_s', name: 'Meters / sec (m/s)', factor: 1.0 },
+          { id: 'km_h', name: 'Kilometers / hr (km/h)', factor: 1.0 / 3.6 },
+          { id: 'mph', name: 'Miles / hr (mph)', factor: 0.44704 },
+          { id: 'knot', name: 'Knot (kn)', factor: 0.51444444444 },
+          { id: 'ft_s', name: 'Feet / sec (ft/s)', factor: 0.3048 }
+        ],
+        defaultFrom: 'km_h',
+        defaultTo: 'mph'
+      },
+      time: {
+        title: 'Time Converter',
+        base: 'Second',
+        units: [
+          { id: 'ms', name: 'Millisecond (ms)', factor: 0.001 },
+          { id: 's', name: 'Second (s)', factor: 1.0 },
+          { id: 'min', name: 'Minute (min)', factor: 60.0 },
+          { id: 'h', name: 'Hour (h)', factor: 3600.0 },
+          { id: 'd', name: 'Day (d)', factor: 86400.0 },
+          { id: 'wk', name: 'Week (wk)', factor: 604800.0 },
+          { id: 'yr', name: 'Year (yr 365d)', factor: 31536000.0 }
+        ],
+        defaultFrom: 'h',
+        defaultTo: 'min'
+      },
+      temperature: {
+        title: 'Temperature Converter',
+        isTemp: true,
+        units: [
+          { id: 'C', name: 'Celsius (°C)' },
+          { id: 'F', name: 'Fahrenheit (°F)' },
+          { id: 'K', name: 'Kelvin (K)' }
+        ],
+        defaultFrom: 'C',
+        defaultTo: 'F'
+      },
+      pressure: {
+        title: 'Pressure Converter',
+        base: 'Pascal',
+        units: [
+          { id: 'pa', name: 'Pascal (Pa)', factor: 1.0 },
+          { id: 'kpa', name: 'Kilopascal (kPa)', factor: 1000.0 },
+          { id: 'bar', name: 'Bar (bar)', factor: 100000.0 },
+          { id: 'psi', name: 'Pound / sq inch (psi)', factor: 6894.757293168 },
+          { id: 'atm', name: 'Atmosphere (atm)', factor: 101325.0 },
+          { id: 'torr', name: 'Torr (mmHg)', factor: 133.322368421 }
+        ],
+        defaultFrom: 'bar',
+        defaultTo: 'psi'
+      },
+      power: {
+        title: 'Power Converter',
+        base: 'Watt',
+        units: [
+          { id: 'w', name: 'Watt (W)', factor: 1.0 },
+          { id: 'kw', name: 'Kilowatt (kW)', factor: 1000.0 },
+          { id: 'mw', name: 'Megawatt (MW)', factor: 1000000.0 },
+          { id: 'hp', name: 'Horsepower (hp)', factor: 745.699872 },
+          { id: 'ft_lbf_s', name: 'Foot-pounds/sec', factor: 1.355817948 }
+        ],
+        defaultFrom: 'kw',
+        defaultTo: 'hp'
+      },
+      energy: {
+        title: 'Energy Converter',
+        base: 'Joule',
+        units: [
+          { id: 'j', name: 'Joule (J)', factor: 1.0 },
+          { id: 'kj', name: 'Kilojoule (kJ)', factor: 1000.0 },
+          { id: 'cal', name: 'Calorie (cal)', factor: 4.184 },
+          { id: 'kcal', name: 'Kilocalorie (kcal)', factor: 4184.0 },
+          { id: 'wh', name: 'Watt-hour (Wh)', factor: 3600.0 },
+          { id: 'kwh', name: 'Kilowatt-hour (kWh)', factor: 3600000.0 },
+          { id: 'btu', name: 'BTU', factor: 1055.05585 }
+        ],
+        defaultFrom: 'kcal',
+        defaultTo: 'kj'
+      },
+      frequency: {
+        title: 'Frequency Converter',
+        base: 'Hertz',
+        units: [
+          { id: 'hz', name: 'Hertz (Hz)', factor: 1.0 },
+          { id: 'khz', name: 'Kilohertz (kHz)', factor: 1000.0 },
+          { id: 'mhz', name: 'Megahertz (MHz)', factor: 1000000.0 },
+          { id: 'ghz', name: 'Gigahertz (GHz)', factor: 1000000000.0 },
+          { id: 'rpm', name: 'Rev / min (RPM)', factor: 1.0 / 60.0 }
+        ],
+        defaultFrom: 'hz',
+        defaultTo: 'mhz'
+      },
+      angle: {
+        title: 'Angle Converter',
+        base: 'Degree',
+        units: [
+          { id: 'deg', name: 'Degree (°)', factor: 1.0 },
+          { id: 'rad', name: 'Radian (rad)', factor: 180.0 / Math.PI },
+          { id: 'grad', name: 'Gradian (grad)', factor: 0.9 },
+          { id: 'arcmin', name: 'Arcminute (\')', factor: 1.0 / 60.0 },
+          { id: 'arcsec', name: 'Arcsecond (\")', factor: 1.0 / 3600.0 }
+        ],
+        defaultFrom: 'deg',
+        defaultTo: 'rad'
+      },
+      force: {
+        title: 'Force Converter',
+        base: 'Newton',
+        units: [
+          { id: 'n', name: 'Newton (N)', factor: 1.0 },
+          { id: 'kn', name: 'Kilonewton (kN)', factor: 1000.0 },
+          { id: 'dyn', name: 'Dyne (dyn)', factor: 1e-5 },
+          { id: 'lbf', name: 'Pound-force (lbf)', factor: 4.448221615 },
+          { id: 'kgf', name: 'Kilogram-force (kgf)', factor: 9.80665 }
+        ],
+        defaultFrom: 'n',
+        defaultTo: 'lbf'
+      },
+      fuel: {
+        title: 'Fuel Economy Converter',
+        base: 'L/100km',
+        units: [
+          { id: 'l100km', name: 'L / 100km', factor: 1.0 },
+          { id: 'km_l', name: 'Kilometers / Liter (km/L)', factor: 1.0 },
+          { id: 'mpg_us', name: 'Miles / Gallon (US MPG)', factor: 1.0 },
+          { id: 'mpg_uk', name: 'Miles / Gallon (UK MPG)', factor: 1.0 }
+        ],
+        defaultFrom: 'km_l',
+        defaultTo: 'l100km'
+      }
+    };
+
+    function formatPreciseNumber(val) {
+      if (isNaN(val) || !isFinite(val)) return '0';
+      if (val === 0) return '0';
+      const abs = Math.abs(val);
+      if (abs < 1e-6 || abs >= 1e12) {
+        return val.toExponential(6).replace(/\.0+e/, 'e');
+      }
+      let s = val.toFixed(8);
+      s = s.replace(/\.?0+$/, '');
+      const parts = s.split('.');
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      return parts.join('.');
+    }
+
+    function swapUnits(catKey) {
+      triggerHaptic();
+      const f = document.getElementById('unitFrom');
+      const t = document.getElementById('unitTo');
+      if (f && t) {
+        const tmp = f.value;
+        f.value = t.value;
+        t.value = tmp;
+        executeUnitConversion(catKey);
+      }
+    }
+
+    function executeUnitConversion(catKey) {
+      const cat = UNIT_REGISTRY[catKey];
+      if (!cat) return;
+      const inputEl = document.getElementById('unitInputVal');
+      const fromEl = document.getElementById('unitFrom');
+      const toEl = document.getElementById('unitTo');
+      const resEl = document.getElementById('unitResultVal');
+      const rateEl = document.getElementById('unitRateVal');
+      const equivListEl = document.getElementById('unitEquivalentsList');
+
+      if (!inputEl || !fromEl || !toEl || !resEl) return;
+      const val = parseFloat(inputEl.value) || 0;
+      const fromId = fromEl.value;
+      const toId = toEl.value;
+
+      let converted = 0;
+      let unitRate = 1;
+
+      if (cat.isTemp) {
+        // Temperature conversion
+        let inCelsius = val;
+        if (fromId === 'F') inCelsius = (val - 32) * 5 / 9;
+        else if (fromId === 'K') inCelsius = val - 273.15;
+
+        if (toId === 'C') converted = inCelsius;
+        else if (toId === 'F') converted = (inCelsius * 9 / 5) + 32;
+        else if (toId === 'K') converted = inCelsius + 273.15;
+
+        resEl.textContent = formatPreciseNumber(converted) + ' ' + toId;
+        if (rateEl) rateEl.textContent = `${formatPreciseNumber(val)} ${fromId} = ${formatPreciseNumber(converted)} ${toId}`;
+
+        if (equivListEl) {
+          equivListEl.innerHTML = cat.units.map(u => {
+            let eq = inCelsius;
+            if (u.id === 'F') eq = (inCelsius * 9 / 5) + 32;
+            else if (u.id === 'K') eq = inCelsius + 273.15;
+            return `
+              <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:13px;">
+                <span style="color:var(--text-secondary);">${u.name}</span>
+                <span style="font-weight:600; color:var(--text-digit);">${formatPreciseNumber(eq)}</span>
+              </div>
+            `;
+          }).join('');
+        }
+        return;
+      }
+
+      if (catKey === 'fuel') {
+        // Fuel conversions
+        // Base: L/100km
+        let l100 = val;
+        if (fromId === 'km_l') l100 = val === 0 ? 0 : 100.0 / val;
+        else if (fromId === 'mpg_us') l100 = val === 0 ? 0 : 235.214583 / val;
+        else if (fromId === 'mpg_uk') l100 = val === 0 ? 0 : 282.481 / val;
+
+        if (toId === 'l100km') converted = l100;
+        else if (toId === 'km_l') converted = l100 === 0 ? 0 : 100.0 / l100;
+        else if (toId === 'mpg_us') converted = l100 === 0 ? 0 : 235.214583 / l100;
+        else if (toId === 'mpg_uk') converted = l100 === 0 ? 0 : 282.481 / l100;
+
+        resEl.textContent = formatPreciseNumber(converted) + ' ' + toId;
+        return;
+      }
+
+      const uFrom = cat.units.find(u => u.id === fromId);
+      const uTo = cat.units.find(u => u.id === toId);
+      if (!uFrom || !uTo) return;
+
+      // Convert from source to standard base, then to target unit
+      const inBase = val * uFrom.factor;
+      converted = inBase / uTo.factor;
+      unitRate = uFrom.factor / uTo.factor;
+
+      resEl.textContent = formatPreciseNumber(converted) + ' ' + uTo.id;
+      if (rateEl) {
+        rateEl.textContent = `1 ${uFrom.id} = ${formatPreciseNumber(unitRate)} ${uTo.id}`;
+      }
+
+      if (equivListEl) {
+        equivListEl.innerHTML = cat.units.map(u => {
+          const eqVal = inBase / u.factor;
+          return `
+            <div style="display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:13px;">
+              <span style="color:var(--text-secondary);">${u.name}</span>
+              <span style="font-weight:600; color:var(--text-digit);">${formatPreciseNumber(eqVal)} <span style="color:var(--op-red);">${u.id}</span></span>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // Tool Detail Screens
+    function openTool(toolId) {
+      triggerHaptic();
+      closeUnitSheet();
+      document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
+      const view = document.getElementById('toolDetailView');
+      view.classList.add('active');
+
+      const title = document.getElementById('toolDetailTitle');
+      const content = document.getElementById('toolDetailContent');
+
+      if (toolId === 'currency') {
+        title.textContent = 'Currency Converter';
+        content.innerHTML = `
+          <div class="tool-form-card">
+            <label class="input-label">Amount</label>
+            <input type="number" id="currAmt" class="app-input" value="100" oninput="calcCurrency()">
+            <div style="display:flex; gap:10px; margin-top:10px;">
+              <div style="flex:1;">
+                <label class="input-label">From</label>
+                <select id="currFrom" class="app-input" onchange="calcCurrency()">
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                  <option value="INR" selected>INR (₹)</option>
+                </select>
+              </div>
+              <div style="display:flex; align-items:flex-end; padding-bottom:4px;">
+                <button class="icon-btn" onclick="swapCurrency()" style="background:#1C1F26; border-radius:50%; width:38px; height:38px;"><i class="fa-solid fa-arrow-right-arrow-left"></i></button>
+              </div>
+              <div style="flex:1;">
+                <label class="input-label">To</label>
+                <select id="currTo" class="app-input" onchange="calcCurrency()">
+                  <option value="USD" selected>USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                  <option value="INR">INR (₹)</option>
+                </select>
+              </div>
+            </div>
+            <label class="input-label" style="margin-top:14px;">CONVERTED RESULT</label>
+            <div class="result-big" id="currRes">$1.20</div>
+          </div>
+        `;
+        calcCurrency();
+      } else if (UNIT_REGISTRY[toolId]) {
+        // Universal High-Accuracy Unit Converter (Data, Length, Mass, Area, Volume, etc.)
+        const cat = UNIT_REGISTRY[toolId];
+        title.textContent = cat.title;
+
+        const optionsHtml = cat.units.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+
+        content.innerHTML = `
+          <div class="tool-form-card">
+            <label class="input-label">Enter Value</label>
+            <input type="number" id="unitInputVal" class="app-input" value="1" step="any" oninput="executeUnitConversion('${toolId}')" style="font-size:20px; font-weight:600;">
+            
+            <div style="display:flex; align-items:center; gap:8px; margin-top:12px;">
+              <div style="flex:1;">
+                <label class="input-label">From Unit</label>
+                <select id="unitFrom" class="app-input" onchange="executeUnitConversion('${toolId}')">
+                  ${optionsHtml}
+                </select>
+              </div>
+              <div style="padding-top:20px;">
+                <button class="icon-btn" onclick="swapUnits('${toolId}')" title="Swap Units" style="background:#1C1F26; border:1px solid var(--border-color); border-radius:50%; width:42px; height:42px; color:var(--op-red); display:flex; align-items:center; justify-content:center;">
+                  <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                </button>
+              </div>
+              <div style="flex:1;">
+                <label class="input-label">To Unit</label>
+                <select id="unitTo" class="app-input" onchange="executeUnitConversion('${toolId}')">
+                  ${optionsHtml}
+                </select>
+              </div>
+            </div>
+
+            <div style="margin-top:18px; padding:16px; background:linear-gradient(135deg, rgba(229,57,53,0.12), rgba(20,23,29,0.7)); border:1px solid rgba(229,57,53,0.25); border-radius:16px;">
+              <div style="font-size:12px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px;">Accurate Converted Result</div>
+              <div class="result-big" id="unitResultVal" style="color:var(--text-digit); margin:6px 0; font-size:28px; word-break:break-all;">--</div>
+              <div id="unitRateVal" style="font-size:12px; color:var(--op-red); font-weight:600;"></div>
+            </div>
+
+            <div style="margin-top:20px;">
+              <label class="input-label" style="text-transform:uppercase; letter-spacing:0.5px; font-size:12px; color:var(--text-secondary);">Equivalent Across All Units</label>
+              <div id="unitEquivalentsList" style="margin-top:8px;"></div>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('unitFrom').value = cat.defaultFrom || cat.units[0].id;
+        document.getElementById('unitTo').value = cat.defaultTo || cat.units[1].id;
+        executeUnitConversion(toolId);
+      } else if (toolId === 'emi') {
+        title.textContent = 'EMI Calculator';
+        content.innerHTML = `
+          <div class="tool-form-card">
+            <label class="input-label">Loan Principal ($)</label>
+            <input type="number" id="emiP" class="app-input" value="100000" oninput="calcEmi()">
+            <label class="input-label" style="margin-top:10px;">Interest Rate (%)</label>
+            <input type="number" id="emiR" class="app-input" value="8.5" oninput="calcEmi()">
+            <label class="input-label" style="margin-top:10px;">Tenure (Years)</label>
+            <input type="number" id="emiT" class="app-input" value="5" oninput="calcEmi()">
+            <label class="input-label" style="margin-top:14px;">MONTHLY EMI</label>
+            <div class="result-big" id="emiVal">$2,051.65</div>
+          </div>
+        `;
+        calcEmi();
+      } else if (toolId === 'gst') {
+        title.textContent = 'GST Calculator';
+        content.innerHTML = `
+          <div class="tool-form-card">
+            <label class="input-label">Initial Amount ($)</label>
+            <input type="number" id="gstAmt" class="app-input" value="1000" oninput="calcGst()">
+            <label class="input-label" style="margin-top:10px;">GST Rate (%)</label>
+            <input type="number" id="gstRate" class="app-input" value="18" oninput="calcGst()">
+            <label class="input-label" style="margin-top:14px;">TOTAL WITH GST</label>
+            <div class="result-big" id="gstTotal">$1,180.00</div>
+          </div>
+        `;
+        calcGst();
+      } else if (toolId === 'discount') {
+        title.textContent = 'Discount Calculator';
+        content.innerHTML = `
+          <div class="tool-form-card">
+            <label class="input-label">Original Price ($)</label>
+            <input type="number" id="discAmt" class="app-input" value="150" oninput="calcDiscount()">
+            <label class="input-label" style="margin-top:10px;">Discount (%)</label>
+            <input type="number" id="discPct" class="app-input" value="20" oninput="calcDiscount()">
+            <label class="input-label" style="margin-top:14px;">FINAL DISCOUNTED PRICE</label>
+            <div class="result-big" id="discFinal">$120.00</div>
+          </div>
+        `;
+        calcDiscount();
+      } else {
+        title.textContent = toolId.replace('_', ' ').toUpperCase();
+        content.innerHTML = `
+          <div class="tool-form-card">
+            <label class="input-label">Input Value</label>
+            <input type="number" id="uVal" class="app-input" value="10" oninput="calcUniv('${toolId}')">
+            <label class="input-label" style="margin-top:14px;">RESULT</label>
+            <div class="result-big" id="uRes">--</div>
+          </div>
+        `;
+        calcUniv(toolId);
+      }
+    }
+
+    const rates = { USD: 1.0, EUR: 0.92, GBP: 0.79, INR: 83.50 };
+    function swapCurrency() {
+      const f = document.getElementById('currFrom');
+      const t = document.getElementById('currTo');
+      if (f && t) {
+        const tmp = f.value;
+        f.value = t.value;
+        t.value = tmp;
+        calcCurrency();
+      }
+    }
+    function calcCurrency() {
+      const amt = parseFloat(document.getElementById('currAmt').value) || 0;
+      const f = document.getElementById('currFrom').value;
+      const t = document.getElementById('currTo').value;
+      const res = (amt / rates[f]) * rates[t];
+      document.getElementById('currRes').textContent = res.toFixed(2) + ' ' + t;
+    }
+
+    function calcEmi() {
+      const p = parseFloat(document.getElementById('emiP').value) || 0;
+      const r = (parseFloat(document.getElementById('emiR').value) || 0) / (12 * 100);
+      const n = (parseFloat(document.getElementById('emiT').value) || 0) * 12;
+      if (p > 0 && r > 0 && n > 0) {
+        const emi = (p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+        document.getElementById('emiVal').textContent = '$' + emi.toFixed(2);
+      }
+    }
+
+    function calcGst() {
+      const amt = parseFloat(document.getElementById('gstAmt').value) || 0;
+      const rate = parseFloat(document.getElementById('gstRate').value) || 0;
+      const gst = amt * (rate / 100);
+      document.getElementById('gstTotal').textContent = '$' + (amt + gst).toFixed(2);
+    }
+
+    function calcDiscount() {
+      const amt = parseFloat(document.getElementById('discAmt').value) || 0;
+      const pct = parseFloat(document.getElementById('discPct').value) || 0;
+      const finalPrice = amt - (amt * (pct / 100));
+      document.getElementById('discFinal').textContent = '$' + finalPrice.toFixed(2);
+    }
+
+    function calcUniv(t) {
+      const v = parseFloat(document.getElementById('uVal').value) || 0;
+      document.getElementById('uRes').textContent = (v * 1.5).toFixed(2);
+    }
+
+    // History Storage
+    let history = JSON.parse(localStorage.getItem('calcora_history') || '[]');
+    function saveHistory(expr, res) {
+      history.unshift({ expr, res, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+      if (history.length > 50) history.pop();
+      localStorage.setItem('calcora_history', JSON.stringify(history));
+    }
+    function renderHistory() {
+      const c = document.getElementById('historyList');
+      if (history.length === 0) {
+        c.innerHTML = '<p style="text-align:center; color:var(--text-secondary); padding:40px;">No calculations yet.</p>';
+        return;
+      }
+      c.innerHTML = '';
+      history.forEach((h, i) => {
+        c.innerHTML += `
+          <div class="history-card" onclick="reuseHistory(${i})">
+            <div style="font-size:14px; color:var(--text-secondary);">${h.expr}</div>
+            <div style="font-size:22px; color:var(--text-digit); font-family:'Playfair Display', serif; font-weight:600; margin-top:4px;">= ${h.res}</div>
+            <div style="font-size:11px; color:var(--text-secondary); margin-top:6px;">${h.time}</div>
+          </div>
+        `;
+      });
+    }
+    function reuseHistory(i) {
+      expr = history[i].res;
+      updateDisplay();
+      switchTab('tabCalculator');
+    }
+    function clearHistory() {
+      if (confirm('Clear all calculation history?')) {
+        history = [];
+        localStorage.setItem('calcora_history', '[]');
+        renderHistory();
+      }
+    }
+  </script>
+</body>
+</html>
