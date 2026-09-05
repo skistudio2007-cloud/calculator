@@ -285,43 +285,6 @@ fun SettingsScreen(
                 }
             }
 
-            // BROWSER LINKS SECTION
-            SettingsSection(title = "BROWSER & WEB ACCESS") {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Web & Desktop Preview Link",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Calcora includes a full browser version that runs in Chrome, Edge, and mobile browsers. Tap below to launch in your device browser.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = glassColors.secondaryText,
-                        lineHeight = 18.sp
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = {
-                            try {
-                                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
-                                    data = android.net.Uri.parse("https://github.com")
-                                }
-                                context.startActivity(intent)
-                            } catch (e: Exception) {
-                                Toast.makeText(context, "Browser opened", Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Default.Language, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Open in Browser", fontWeight = FontWeight.SemiBold)
-                    }
-                }
-            }
 
             // ABOUT SECTION
             SettingsSection(title = "ABOUT CALCORA") {
