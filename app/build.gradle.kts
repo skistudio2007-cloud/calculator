@@ -8,17 +8,26 @@ android {
     namespace = "com.example.calcora"
     compileSdk = 36
     defaultConfig {
-        applicationId = "com.example.calcora"
+        applicationId = "com.skistudio.calcora"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("calcora-release-key.jks")
+            storePassword = "calcora123"
+            keyAlias = "calcora"
+            keyPassword = "calcora123"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
