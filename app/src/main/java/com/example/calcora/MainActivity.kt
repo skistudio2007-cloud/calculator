@@ -54,10 +54,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Hide status bar (time, battery, icons) for clean edge-to-edge look
         val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        windowInsetsController.hide(WindowInsetsCompat.Type.statusBars())
+        windowInsetsController.show(WindowInsetsCompat.Type.statusBars())
 
         historyRepository = CalculatorHistoryRepository(applicationContext)
         preferencesRepository = PreferencesRepository(applicationContext)

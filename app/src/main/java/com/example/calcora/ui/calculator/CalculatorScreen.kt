@@ -3,8 +3,10 @@ package com.example.calcora.ui.calculator
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -63,7 +65,7 @@ fun CalculatorScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 10.dp),
+                .padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 6.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -179,12 +181,58 @@ fun CalculatorScreen(
             }
         }
 
-        // TOP DISPLAY AREA (Serif font + Red cursor line)
+        // Flexible breathing space between Header & Display (30–50dp flexible, shrinkable on smaller screens)
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 12.dp, max = 40.dp)
+                .weight(0.12f, fill = false)
+        )
+
+        // TOP DISPLAY AREA (Independent Expression & Dynamic Scaled Result)
+        val exprText = when {
+            state.isEvaluated && state.expression.isNotEmpty() -> state.expression
+            !state.isEvaluated && state.previewResult.isNotEmpty() -> "= ${state.previewResult}"
+            else -> ""
+        }
+
+        val resultText = when {
+            state.isEvaluated -> state.finalResult
+            state.expression.isNotEmpty() -> state.expression
+            else -> "0"
+        }
+
+        val resultFontSize = when {
+            resultText.length <= 9 -> 50.sp
+            resultText.length in 10..14 -> 40.sp
+            resultText.length in 15..18 -> 32.sp
+            else -> 26.sp
+        }
+
+        val cursorHeight = when {
+            resultText.length <= 9 -> 44.dp
+            resultText.length in 10..14 -> 34.dp
+            resultText.length in 15..18 -> 28.dp
+            else -> 22.dp
+        }
+
+        val exprScrollState = rememberScrollState()
+        LaunchedEffect(exprText) {
+            if (exprText.isNotEmpty()) {
+                exprScrollState.scrollTo(exprScrollState.maxValue)
+            }
+        }
+
+        val resultScrollState = rememberScrollState()
+        LaunchedEffect(resultText) {
+            resultScrollState.scrollTo(resultScrollState.maxValue)
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .padding(horizontal = 24.dp, vertical = 12.dp),
+                .padding(horizontal = 24.dp, vertical = 8.dp),
             contentAlignment = Alignment.BottomEnd
         ) {
             Column(
@@ -192,17 +240,32 @@ fun CalculatorScreen(
                 verticalArrangement = Arrangement.Bottom,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Calculation Step preview or expression
-                if (state.expression.isNotEmpty() && state.isEvaluated) {
-                    Text(
-                        text = state.expression,
-                        color = AmoledSecondaryText,
-                        fontSize = 22.sp,
-                        fontFamily = FontFamily.Default,
-                        fontWeight = FontWeight.Normal,
-                        textAlign = TextAlign.End,
-                        modifier = Modifier.padding(bottom = 6.dp)
-                    )
+                // 1. Independent Expression Container (Top, Single Line, Horizontal Scroll)
+                if (exprText.isNotEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.CenterEnd
+                    ) {
+                        Row(
+                            modifier = Modifier.horizontalScroll(exprScrollState),
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = exprText,
+                                color = AmoledSecondaryText,
+                                fontSize = 20.sp,
+                                fontFamily = FontFamily.Default,
+                                fontWeight = FontWeight.Normal,
+                                maxLines = 1,
+                                softWrap = false,
+                                textAlign = TextAlign.End
+                            )
+                        }
+                    }
+
+                    // Spacing between expression and result
+                    Spacer(modifier = Modifier.height(10.dp))
                 }
 
                 // Error message banner
@@ -210,43 +273,45 @@ fun CalculatorScreen(
                     Text(
                         text = state.errorMessage!!,
                         color = AmoledOperatorRed,
-                        fontSize = 20.sp,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
                         fontFamily = FontFamily.Default,
+                        maxLines = 1,
                         textAlign = TextAlign.End,
-                        modifier = Modifier.padding(bottom = 4.dp)
+                        modifier = Modifier.padding(bottom = 6.dp)
                     )
                 }
 
-                // Main Number / Input with red blinking cursor
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.End
+                // 2. Independent Result Container (Bottom, Dynamic Font Scale, Single Line, Horizontal Scroll)
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.CenterEnd
                 ) {
-                    val displayText = when {
-                        state.isEvaluated -> state.finalResult
-                        state.expression.isNotEmpty() -> state.expression
-                        else -> "0"
+                    Row(
+                        modifier = Modifier.horizontalScroll(resultScrollState),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = resultText,
+                            color = AmoledDigitText,
+                            fontSize = resultFontSize,
+                            fontFamily = FontFamily.Default,
+                            fontWeight = FontWeight.Light,
+                            maxLines = 1,
+                            softWrap = false,
+                            textAlign = TextAlign.End
+                        )
+
+                        // Vertical Red Cursor
+                        Box(
+                            modifier = Modifier
+                                .padding(start = 4.dp)
+                                .width(2.5.dp)
+                                .height(cursorHeight)
+                                .background(AmoledCursorRed.copy(alpha = cursorAlpha))
+                        )
                     }
-
-                    Text(
-                        text = displayText,
-                        color = AmoledDigitText,
-                        fontSize = if (displayText.length > 9) 40.sp else 58.sp,
-                        fontFamily = FontFamily.Default,
-                        fontWeight = FontWeight.Light,
-                        textAlign = TextAlign.End,
-                        maxLines = 2
-                    )
-
-                    // Vertical Red Cursor
-                    Box(
-                        modifier = Modifier
-                            .padding(start = 4.dp)
-                            .width(2.5.dp)
-                            .height(if (displayText.length > 9) 36.dp else 48.dp)
-                            .background(AmoledCursorRed.copy(alpha = cursorAlpha))
-                    )
                 }
 
                 // Step breakdown chip

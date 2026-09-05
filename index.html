@@ -117,7 +117,7 @@
 
     /* Calculator Top Bar (History, All Tools + Top-Right 3-Dot) */
     .calc-top-bar {
-      padding: 10px 18px 4px;
+      padding: 16px 20px 6px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -182,21 +182,31 @@
     /* Calculator Display Area */
     .calc-display-section {
       flex: 1;
-      padding: 10px 24px 14px;
+      padding: 12px 24px 14px;
+      margin-top: clamp(12px, 3vh, 36px);
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
       align-items: flex-end;
+      min-height: 0;
     }
 
     .display-expr-line {
       font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
-      font-size: 22px;
+      font-size: 20px;
       color: var(--text-secondary);
-      margin-bottom: 4px;
-      min-height: 28px;
-      word-break: break-all;
+      margin-bottom: 10px;
+      min-height: 26px;
+      width: 100%;
+      white-space: nowrap;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
       text-align: right;
+    }
+    .display-expr-line::-webkit-scrollbar {
+      display: none;
     }
 
     .display-main-row {
@@ -204,25 +214,35 @@
       align-items: center;
       justify-content: flex-end;
       width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .display-main-row::-webkit-scrollbar {
+      display: none;
     }
 
     .display-number {
       font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
-      font-size: 60px;
+      font-size: 50px;
       font-weight: 300;
       color: var(--text-digit);
       line-height: 1.1;
-      word-break: break-all;
+      white-space: nowrap;
       text-align: right;
+      transition: font-size 0.12s ease;
     }
 
     .red-cursor {
-      width: 3px;
-      height: 52px;
+      width: 2.5px;
+      height: 44px;
       background: var(--cursor-red);
       margin-left: 4px;
+      flex-shrink: 0;
       animation: blink 1.1s infinite;
       border-radius: 2px;
+      transition: height 0.12s ease;
     }
 
     @keyframes blink {
@@ -1154,12 +1174,43 @@
       updateDisplay();
     }
 
+    function adjustDisplayFontSize(text) {
+      const el = document.getElementById('calcRes');
+      const cursor = document.querySelector('.red-cursor');
+      if (!el) return;
+      const len = (text || '').length;
+      let size = '50px';
+      let curH = '44px';
+      if (len > 18) {
+        size = '26px';
+        curH = '22px';
+      } else if (len > 14) {
+        size = '32px';
+        curH = '28px';
+      } else if (len > 9) {
+        size = '40px';
+        curH = '34px';
+      }
+      el.style.fontSize = size;
+      if (cursor) cursor.style.height = curH;
+    }
+
+    function scrollDisplayToEnd() {
+      requestAnimationFrame(() => {
+        const row = document.querySelector('.display-main-row');
+        if (row) row.scrollLeft = row.scrollWidth;
+        const exprEl = document.getElementById('calcExpr');
+        if (exprEl) exprEl.scrollLeft = exprEl.scrollWidth;
+      });
+    }
+
     function clearCalc() {
       expr = '';
       isEvaluated = false;
       lastSteps = [];
       document.getElementById('calcExpr').textContent = '';
       document.getElementById('calcRes').textContent = '0';
+      adjustDisplayFontSize('0');
       document.getElementById('stepsPill').style.display = 'none';
     }
 
@@ -1174,7 +1225,10 @@
     }
 
     function updateDisplay() {
-      document.getElementById('calcRes').textContent = expr || '0';
+      const text = expr || '0';
+      document.getElementById('calcRes').textContent = text;
+      adjustDisplayFontSize(text);
+      scrollDisplayToEnd();
     }
 
     function evaluateCalc() {
@@ -1194,11 +1248,14 @@
 
         document.getElementById('calcExpr').textContent = expr + ' =';
         document.getElementById('calcRes').textContent = formatted;
+        adjustDisplayFontSize(formatted);
+        scrollDisplayToEnd();
         isEvaluated = true;
 
         saveHistory(expr, formatted);
       } catch (err) {
         document.getElementById('calcRes').textContent = 'Error';
+        adjustDisplayFontSize('Error');
       }
     }
 
